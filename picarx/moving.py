@@ -1,148 +1,204 @@
-import picarx_improved as pcx
+from picarx_improved import Picarx
+import atexit
 import time
 
-def parkRight(car):
-	car.stop()
-	car.set_dir_servo_angle(0)
-	car.forward(70)
-	time.sleep(1.25)
-	car.stop()
+class Maneuvering(object):
+    def __init__(self):
+        self.px = Picarx()
+        self.default_speed = 40
+        self.default_steering = 20
+        self.max_steering = 40
+        self.pause = 1
+        self.command_wait = 0.25
+        atexit.register(self.cleanup)
 
-	angleRange = [-30,28]
-	car.set_dir_servo_angle(angleRange[0])
-	time.sleep(0.1)
+    def calibrate_steering(self):
+        self.px.forward(self.default_speed)
+        time.sleep(self.pause)
+        self.px.stop()
+    
+    def forward_and_backward_with_steering(self):
+        # take input
+        valid = False
+        forward_steer = input("Input forward steering angle: ")
+        while not valid:
+            try:
+                forward_steer = int(forward_steer)
+                valid = True
+            except ValueError:
+                forward_steer = input("Invalid number. Input forward steering angle: ")
+            
+        valid = False
+        backward_steer = input("Input backward steering angle: ")
+        while not valid:
+            try: 
+                backward_steer = int(backward_steer)
+                valid = True
+            except ValueError:
+                backward_steer = input("Invalid number. Input backward steering angle: ")
 
-	car.backward(70)
-	for i in range(angleRange[0],angleRange[1]):
-		car.set_dir_servo_angle(i)
-		car.backward(70)
-		time.sleep(.022)
+        # forward
+        self.px.set_dir_servo_angle(forward_steer)
+        time.sleep(self.command_wait)
+        self.px.forward(self.default_speed)
+        time.sleep(self.pause)
+        self.px.stop()
+        time.sleep(self.command_wait)
+        self.px.set_dir_servo_angle(0)
+        time.sleep(self.command_wait)
 
-	car.stop()
-	car.set_dir_servo_angle(0)
+        # backward
+        self.px.set_dir_servo_angle(backward_steer)
+        time.sleep(self.command_wait)
+        self.px.backward(self.default_speed)
+        time.sleep(self.pause)
+        self.px.stop()
+        time.sleep(self.command_wait)
+        self.px.set_dir_servo_angle(0)
 
-def parkLeft(car):
-	car.stop()
-	car.set_dir_servo_angle(0)
-	car.forward(70)
-	time.sleep(1.2)
-	car.stop()
+    def parallel_parking(self):
+        # take input
+        valid = False
+        side = input("Input parking side (left or right): ")
+        while not valid:
+            if side == "left" or side == "right":
+                valid = True
+            else:
+                side = input("Invalid input. Input parking side (left or right): ")
 
-	angleRange = [30,-26]
-	car.set_dir_servo_angle(angleRange[0])
-	time.sleep(0.1)
 
-	car.backward(70)
-	for i in range(angleRange[0],angleRange[1],-1):
-		car.set_dir_servo_angle(i)
-		car.backward(70)
-		time.sleep(.022)
+        # assume side by side start 1in away
+        # backwards
+        self.px.set_dir_servo_angle(0)
+        time.sleep(self.command_wait)
+        self.px.backward(self.default_speed)
+        time.sleep(self.pause / 2)
+        self.px.stop()
+        time.sleep(self.command_wait)
+        self.px.set_dir_servo_angle(0)
+        time.sleep(self.command_wait)
+        
+        # back 45 into spot
+        if side == "left":
+            self.px.set_dir_servo_angle(-self.max_steering)
+        else:
+            self.px.set_dir_servo_angle(self.max_steering)
+        time.sleep(self.command_wait)
+        self.px.backward(self.default_speed)
+        time.sleep(self.pause)
+        self.px.stop()
+        time.sleep(self.command_wait)
+        self.px.set_dir_servo_angle(0)
+        time.sleep(self.command_wait)
 
-	car.stop()
-	car.set_dir_servo_angle(0)
+        # back in straight
+        self.px.set_dir_servo_angle(0)
+        time.sleep(self.command_wait)
+        self.px.backward(self.default_speed)
+        time.sleep(self.pause / 2)
+        self.px.stop()
+        time.sleep(self.command_wait)
+        self.px.set_dir_servo_angle(0)
+        time.sleep(self.command_wait)
 
-def goForward(car):
-	car.stop()
-	car.set_dir_servo_angle(0)
-	car.forward(70)
-	time.sleep(2)
-	car.stop()
+        # back 45 to parallel
+        if side == "left":
+            self.px.set_dir_servo_angle(self.max_steering)
+        else:
+            self.px.set_dir_servo_angle(-self.max_steering)
+        time.sleep(self.command_wait)
+        self.px.backward(self.default_speed)
+        time.sleep(self.pause)
+        self.px.stop()
+        time.sleep(self.command_wait)
+        self.px.set_dir_servo_angle(0)
+        time.sleep(self.command_wait)
 
-def veerRight(car):
-	car.stop()
-	car.set_dir_servo_angle(-15)
-	car.forward(70)
-	time.sleep(2)
-	car.stop()
-	car.set_dir_servo_angle(0)
+        # move forward into spot
+        self.px.set_dir_servo_angle(0)
+        time.sleep(self.command_wait)
+        self.px.forward(self.default_speed)
+        time.sleep(self.pause / 1.5)
+        self.px.stop()
+        time.sleep(self.command_wait)
+        self.px.set_dir_servo_angle(0)
+        time.sleep(self.command_wait)
 
-def veerLeft(car):
-	car.stop()
-	car.set_dir_servo_angle(15)
-	car.forward(70)
-	time.sleep(2)
-	car.stop()
-	car.set_dir_servo_angle(0)
+    def k_turn(self):
+        # take input
+        valid = False
+        side = input("Input initial turning side (left or right): ")
+        while not valid:
+            if side == "left" or side == "right":
+                valid = True
+            else:
+                side = input("Invalid input. Input initial turning side (left or right): ")
 
-def goBackward(car):
-	car.stop()
-	car.set_dir_servo_angle(0)
-	car.backward(70)
-	time.sleep(2)
-	car.stop()
+        # initial turn
+        if side == "left":
+            self.px.set_dir_servo_angle(-self.max_steering/2)
+        else:
+            self.px.set_dir_servo_angle(self.max_steering/2)
+        time.sleep(self.command_wait)
+        self.px.forward(self.default_speed)
+        time.sleep(self.pause*2.5)
+        self.px.stop()
+        time.sleep(self.command_wait)
+        self.px.set_dir_servo_angle(0)
+        time.sleep(self.command_wait)
 
-def veerBackRight(car):
-	car.stop()
-	car.set_dir_servo_angle(-15)
-	car.backward(70)
-	time.sleep(2)
-	car.stop()
-	car.set_dir_servo_angle(0)
+        # backup
+        if side == "left":
+            self.px.set_dir_servo_angle(self.max_steering/1.5)
+        else:
+            self.px.set_dir_servo_angle(-self.max_steering/1.5)
+        time.sleep(self.command_wait)
+        self.px.backward(self.default_speed)
+        time.sleep(self.pause*1.7)
+        self.px.stop()
+        time.sleep(self.command_wait)
+        self.px.set_dir_servo_angle(0)
+        time.sleep(self.command_wait)
 
-def veerBackLeft(car):
-	car.stop()
-	car.set_dir_servo_angle(15)
-	car.backward(70)
-	time.sleep(2)
-	car.stop()
-	car.set_dir_servo_angle(0)
+        # straighten
+        self.px.set_dir_servo_angle(0)
+        time.sleep(self.command_wait)
+        self.px.forward(self.default_speed)
+        time.sleep(self.pause*1.5)
+        self.px.stop()
+        time.sleep(self.command_wait)
+        self.px.set_dir_servo_angle(0)
+        time.sleep(self.command_wait)
 
-def kTurnLeft(car):
-	car.stop()
-	car.set_dir_servo_angle(20)
-	car.forward(70)
-	time.sleep(1.2)
-	car.stop()
-	car.set_dir_servo_angle(-20)
-	car.backward(70)
-	time.sleep(1.2)
-	car.stop()
-	car.set_dir_servo_angle(0)
-	car.forward(70)
-	time.sleep(1)
-	car.stop()
+    def menu(self):
+        while True:
+            print("Welcome to the Picar menu!")
+            print("0: Calibrate Steering")
+            print("1: Forward and Backward (with steering")
+            print("2: Parallel Parking")
+            print("3: K-turn")
+            print("q: Quit")
 
-def kTurnRight(car):
-	car.stop()
-	car.set_dir_servo_angle(-20)
-	car.forward(70)
-	time.sleep(1.2)
-	car.stop()
-	car.set_dir_servo_angle(20)
-	car.backward(70)
-	time.sleep(1.2)
-	car.stop()
-	car.set_dir_servo_angle(0)
-	car.forward(70)
-	time.sleep(1)
-	car.stop()
+            menu_option = input("Please select a maneuver or q to quit: ")
+            if menu_option == "0":
+                maneuvering.calibrate_steering()
+            elif menu_option == "1":
+                maneuvering.forward_and_backward_with_steering()
+            elif menu_option == "2":
+                maneuvering.parallel_parking()
+            elif menu_option == "3":
+                maneuvering.k_turn()
+            elif menu_option == "q":
+                return
+            else:
+                print("Invalid Selection")
+
+    def cleanup(self):
+        self.px.set_dir_servo_angle(0)
+        self.px.stop
 
 if __name__ == "__main__":
-	car = pcx.Picarx()
-	exitFlag = False
-	while not exitFlag:
-		command = input('Watchu need?\n')
-		if command == 'parkRight':
-				parkRight(car)
-		elif command == 'parkLeft':
-				parkLeft(car)
-		elif command == 'goForward':
-				goForward(car)
-		elif command == 'veerRight':
-				veerRight(car)
-		elif command == 'veerLeft':
-				veerLeft(car)
-		elif command == 'goBackward':
-				goBackward(car)
-		elif command == 'veerBackRight':
-				veerBackRight(car)
-		elif command == 'veerBackLeft':
-				veerBackLeft(car)
-		elif command == 'kTurnLeft':
-				kTurnLeft(car)
-		elif command == 'kTurnRight':
-				kTurnRight(car)
-		elif command == 'exit':
-				exitFlag = True
-		else:
-				print('Invalid command\n')
+    maneuvering = Maneuvering()
+    maneuvering.menu()
+
+    
