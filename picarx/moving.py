@@ -5,10 +5,10 @@ import time
 class Maneuvering(object):
     def __init__(self):
         self.px = Picarx()
-        self.default_speed = 40
+        self.default_speed = 80
         self.default_steering = 20
         self.max_steering = 40
-        self.pause = 1
+        self.pause = 7
         self.command_wait = 0.25
         atexit.register(self.cleanup)
 
@@ -65,7 +65,24 @@ class Maneuvering(object):
                 valid = True
             else:
                 side = input("Invalid input. Input parking side (left or right): ")
+        self.px.stop()
+        self.px.set_dir_servo_angle(0)
+        self.px.forward(70)
+        time.sleep(1.2)
+        self.px.stop()
 
+        angleRange = [30,-26]
+        self.px.set_dir_servo_angle(angleRange[0])
+        time.sleep(0.1)
+
+        self.px.backward(70)
+        for i in range(angleRange[0],angleRange[1],-1):
+                self.px.set_dir_servo_angle(i)
+                self.px.backward(70)
+                time.sleep(.032)
+
+        self.px.stop()
+        self.px.set_dir_servo_angle(0)
 
         # assume side by side start 1in away
         # backwards
@@ -141,7 +158,7 @@ class Maneuvering(object):
             self.px.set_dir_servo_angle(self.max_steering/2)
         time.sleep(self.command_wait)
         self.px.forward(self.default_speed)
-        time.sleep(self.pause*2.5)
+        time.sleep(self.pause*1.2)
         self.px.stop()
         time.sleep(self.command_wait)
         self.px.set_dir_servo_angle(0)
@@ -149,12 +166,12 @@ class Maneuvering(object):
 
         # backup
         if side == "left":
-            self.px.set_dir_servo_angle(self.max_steering/1.5)
+            self.px.set_dir_servo_angle(self.max_steering/2)
         else:
-            self.px.set_dir_servo_angle(-self.max_steering/1.5)
+            self.px.set_dir_servo_angle(-self.max_steering/2)
         time.sleep(self.command_wait)
         self.px.backward(self.default_speed)
-        time.sleep(self.pause*1.7)
+        time.sleep(self.pause*1.2)
         self.px.stop()
         time.sleep(self.command_wait)
         self.px.set_dir_servo_angle(0)
