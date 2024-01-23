@@ -61,85 +61,106 @@ class Maneuvering(object):
         valid = False
         side = input("Input parking side (left or right): ")
         while not valid:
-            if side == "left" or side == "right":
+            if side == "left":
                 valid = True
+                self.px.stop()
+                self.px.set_dir_servo_angle(0)
+                self.px.forward(70)
+                time.sleep(1.2)
+                self.px.stop()
+
+                angleRange = [30,-26]
+                self.px.set_dir_servo_angle(angleRange[0])
+                time.sleep(0.1)
+
+                self.px.backward(70)
+                for i in range(angleRange[0],angleRange[1],-1):
+                        self.px.set_dir_servo_angle(i)
+                        self.px.backward(70)
+                        time.sleep(.032)
+
+                self.px.stop()
+                self.px.set_dir_servo_angle(0)
+            elif side == "right" :
+                valid = True
+                self.px.stop()
+                self.px.set_dir_servo_angle(0)
+                self.px.forward(70)
+                time.sleep(1.2)
+                self.px.stop()
+
+                angleRange = [-26,30]
+                self.px.set_dir_servo_angle(angleRange[0])
+                time.sleep(0.1)
+
+                self.px.backward(70)
+                for i in range(angleRange[0],angleRange[1],1):
+                        self.px.set_dir_servo_angle(i)
+                        self.px.backward(70)
+                        time.sleep(.032)
+
+                self.px.stop()
+                self.px.set_dir_servo_angle(0)                
             else:
                 side = input("Invalid input. Input parking side (left or right): ")
-        self.px.stop()
-        self.px.set_dir_servo_angle(0)
-        self.px.forward(70)
-        time.sleep(1.2)
-        self.px.stop()
 
-        angleRange = [30,-26]
-        self.px.set_dir_servo_angle(angleRange[0])
-        time.sleep(0.1)
-
-        self.px.backward(70)
-        for i in range(angleRange[0],angleRange[1],-1):
-                self.px.set_dir_servo_angle(i)
-                self.px.backward(70)
-                time.sleep(.032)
-
-        self.px.stop()
-        self.px.set_dir_servo_angle(0)
 
         # assume side by side start 1in away
         # backwards
-        self.px.set_dir_servo_angle(0)
-        time.sleep(self.command_wait)
-        self.px.backward(self.default_speed)
-        time.sleep(self.pause / 2)
-        self.px.stop()
-        time.sleep(self.command_wait)
-        self.px.set_dir_servo_angle(0)
-        time.sleep(self.command_wait)
+        #self.px.set_dir_servo_angle(0)
+        #time.sleep(self.command_wait)
+        #self.px.backward(self.default_speed)
+        #time.sleep(self.pause / 2)
+        #self.px.stop()
+        #time.sleep(self.command_wait)
+        #self.px.set_dir_servo_angle(0)
+        #time.sleep(self.command_wait)
         
         # back 45 into spot
-        if side == "left":
-            self.px.set_dir_servo_angle(-self.max_steering)
-        else:
-            self.px.set_dir_servo_angle(self.max_steering)
-        time.sleep(self.command_wait)
-        self.px.backward(self.default_speed)
-        time.sleep(self.pause)
-        self.px.stop()
-        time.sleep(self.command_wait)
-        self.px.set_dir_servo_angle(0)
-        time.sleep(self.command_wait)
+        #if side == "left":
+        #    self.px.set_dir_servo_angle(-self.max_steering)
+        #else:
+        #    self.px.set_dir_servo_angle(self.max_steering)
+        #time.sleep(self.command_wait)
+        #self.px.backward(self.default_speed)
+        #time.sleep(self.pause)
+        #self.px.stop()
+        #time.sleep(self.command_wait)
+        #self.px.set_dir_servo_angle(0)
+        #time.sleep(self.command_wait)
 
         # back in straight
-        self.px.set_dir_servo_angle(0)
-        time.sleep(self.command_wait)
-        self.px.backward(self.default_speed)
-        time.sleep(self.pause / 2)
-        self.px.stop()
-        time.sleep(self.command_wait)
-        self.px.set_dir_servo_angle(0)
-        time.sleep(self.command_wait)
+        #self.px.set_dir_servo_angle(0)
+        #time.sleep(self.command_wait)
+        #self.px.backward(self.default_speed)
+        #time.sleep(self.pause / 2)
+        #self.px.stop()
+        #time.sleep(self.command_wait)
+        #self.px.set_dir_servo_angle(0)
+        #time.sleep(self.command_wait)
 
         # back 45 to parallel
-        if side == "left":
-            self.px.set_dir_servo_angle(self.max_steering)
-        else:
-            self.px.set_dir_servo_angle(-self.max_steering)
-        time.sleep(self.command_wait)
-        self.px.backward(self.default_speed)
-        time.sleep(self.pause)
-        self.px.stop()
-        time.sleep(self.command_wait)
-        self.px.set_dir_servo_angle(0)
-        time.sleep(self.command_wait)
+        #if side == "left":
+        #    self.px.set_dir_servo_angle(self.max_steering)
+        #else:
+        #    self.px.set_dir_servo_angle(-self.max_steering)
+        #time.sleep(self.command_wait)
+        #self.px.backward(self.default_speed)
+        #time.sleep(self.pause)
+        #self.px.stop()
+        #time.sleep(self.command_wait)
+        #self.px.set_dir_servo_angle(0)
+        #time.sleep(self.command_wait)
 
         # move forward into spot
-        self.px.set_dir_servo_angle(0)
-        time.sleep(self.command_wait)
-        self.px.forward(self.default_speed)
-        time.sleep(self.pause / 1.5)
-        self.px.stop()
-        time.sleep(self.command_wait)
-        self.px.set_dir_servo_angle(0)
-        time.sleep(self.command_wait)
+        #self.px.set_dir_servo_angle(0)
+        #time.sleep(self.command_wait)
+        #self.px.forward(self.default_speed)
+        #time.sleep(self.pause / 1.5)
+        #self.px.stop()
+        #time.sleep(self.command_wait)
+        #self.px.set_dir_servo_angle(0)
+        #time.sleep(self.command_wait)
 
     def k_turn(self):
         # take input
@@ -189,12 +210,11 @@ class Maneuvering(object):
 
     def menu(self):
         while True:
-            print("Welcome to the Picar menu!")
-            print("0: Calibrate Steering")
-            print("1: Forward and Backward (with steering")
+            print("Select Something")
+            print("1: forward and backward with angle")
             print("2: Parallel Parking")
-            print("3: K-turn")
-            print("q: Quit")
+            print("3: Kturn")
+            print("4: exit")
 
             menu_option = input("Please select a maneuver or q to quit: ")
             if menu_option == "0":
@@ -205,7 +225,7 @@ class Maneuvering(object):
                 maneuvering.parallel_parking()
             elif menu_option == "3":
                 maneuvering.k_turn()
-            elif menu_option == "q":
+            elif menu_option == "4":
                 return
             else:
                 print("Invalid Selection")
