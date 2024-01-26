@@ -23,7 +23,7 @@ def follow_line():
         print(values)
         print([a/b for a,b in zip(values,sensor.grayscale_cal_values)])
         controller.control(interpreter.processing(values,sensor.grayscale_cal_values))
-        car.forward(20)
+        car.forward(30)
         time.sleep(0.1)
         #car.set_dir_servo_angle(-20)
 

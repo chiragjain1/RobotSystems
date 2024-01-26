@@ -2,7 +2,7 @@ from picarx_improved import Picarx
 import atexit
 
 class Controller(object):
-    def __init__(self,car,scale=50):
+    def __init__(self,car,scale=37):
         self.scale = scale
         self.car = car
 
