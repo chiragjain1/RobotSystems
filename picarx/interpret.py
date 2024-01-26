@@ -19,9 +19,11 @@ class Interpreter(object):
             if right > left:
                 print("left")
                 turn = (left - middle) / (middle+left)
-            else: # left > right:
+            else:
+                print("right") # left > right:
                 turn = (middle - right) / (middle+right)
-        else: # we're perfect
+        else:
+            print("perfect")# we're perfect
             turn = 0
 
         return turn

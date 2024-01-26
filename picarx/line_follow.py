@@ -1,7 +1,7 @@
 import time
-from sensors import Sensors
+from sensing import Sensors
 from controller import Controller
-from interpreter import Interpreter
+from interpret import Interpreter
 from picarx_improved import Picarx
 
 
@@ -23,8 +23,10 @@ def follow_line():
         print(values)
         print([a/b for a,b in zip(values,sensor.grayscale_cal_values)])
         controller.control(interpreter.processing(values,sensor.grayscale_cal_values))
-        #car.forward(20)
+        car.forward(20)
         time.sleep(0.1)
+        #car.set_dir_servo_angle(-20)
+
 
 if __name__ == "__main__":
     follow_line()
