@@ -10,7 +10,7 @@ class Maneuvering(object):
         self.max_steering = 40
         self.pause = 7
         self.command_wait = 0.25
-        atexit.register(self.cleanup)
+        #atexit.register(self.cleanup)
 
     def forward_and_backward_with_steering(self):
         # take input
