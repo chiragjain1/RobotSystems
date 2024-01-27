@@ -12,11 +12,6 @@ class Maneuvering(object):
         self.command_wait = 0.25
         atexit.register(self.cleanup)
 
-    def calibrate_steering(self):
-        self.px.forward(self.default_speed)
-        time.sleep(self.pause)
-        self.px.stop()
-    
     def forward_and_backward_with_steering(self):
         # take input
         valid = False
@@ -105,63 +100,7 @@ class Maneuvering(object):
                 side = input("Invalid input. Input parking side (left or right): ")
 
 
-        # assume side by side start 1in away
-        # backwards
-        #self.px.set_dir_servo_angle(0)
-        #time.sleep(self.command_wait)
-        #self.px.backward(self.default_speed)
-        #time.sleep(self.pause / 2)
-        #self.px.stop()
-        #time.sleep(self.command_wait)
-        #self.px.set_dir_servo_angle(0)
-        #time.sleep(self.command_wait)
-        
-        # back 45 into spot
-        #if side == "left":
-        #    self.px.set_dir_servo_angle(-self.max_steering)
-        #else:
-        #    self.px.set_dir_servo_angle(self.max_steering)
-        #time.sleep(self.command_wait)
-        #self.px.backward(self.default_speed)
-        #time.sleep(self.pause)
-        #self.px.stop()
-        #time.sleep(self.command_wait)
-        #self.px.set_dir_servo_angle(0)
-        #time.sleep(self.command_wait)
-
-        # back in straight
-        #self.px.set_dir_servo_angle(0)
-        #time.sleep(self.command_wait)
-        #self.px.backward(self.default_speed)
-        #time.sleep(self.pause / 2)
-        #self.px.stop()
-        #time.sleep(self.command_wait)
-        #self.px.set_dir_servo_angle(0)
-        #time.sleep(self.command_wait)
-
-        # back 45 to parallel
-        #if side == "left":
-        #    self.px.set_dir_servo_angle(self.max_steering)
-        #else:
-        #    self.px.set_dir_servo_angle(-self.max_steering)
-        #time.sleep(self.command_wait)
-        #self.px.backward(self.default_speed)
-        #time.sleep(self.pause)
-        #self.px.stop()
-        #time.sleep(self.command_wait)
-        #self.px.set_dir_servo_angle(0)
-        #time.sleep(self.command_wait)
-
-        # move forward into spot
-        #self.px.set_dir_servo_angle(0)
-        #time.sleep(self.command_wait)
-        #self.px.forward(self.default_speed)
-        #time.sleep(self.pause / 1.5)
-        #self.px.stop()
-        #time.sleep(self.command_wait)
-        #self.px.set_dir_servo_angle(0)
-        #time.sleep(self.command_wait)
-
+       
     def k_turn(self):
         # take input
         valid = False
@@ -217,8 +156,6 @@ class Maneuvering(object):
             print("4: exit")
 
             menu_option = input("Please select a maneuver or q to quit: ")
-            if menu_option == "0":
-                maneuvering.calibrate_steering()
             elif menu_option == "1":
                 maneuvering.forward_and_backward_with_steering()
             elif menu_option == "2":
