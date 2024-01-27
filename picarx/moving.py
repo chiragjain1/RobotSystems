@@ -156,7 +156,7 @@ class Maneuvering(object):
             print("4: exit")
 
             menu_option = input("Please select a maneuver or q to quit: ")
-            elif menu_option == "1":
+            if menu_option == "1":
                 maneuvering.forward_and_backward_with_steering()
             elif menu_option == "2":
                 maneuvering.parallel_parking()
