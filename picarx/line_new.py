@@ -21,7 +21,7 @@ import math
 logging.getLogger().setLevel(logging.DEBUG)
 
 class GrayscaleSensing:
-    @log_on_end(DEBUG, "Grayscale Sensor Initialized")
+    #@log_on_end(DEBUG, "Grayscale Sensor Initialized")
     def __init__(self, pinLeft, pinMid, pinRight, reference = [1000]*3):
         
         if isinstance(pinLeft,str):
@@ -36,7 +36,7 @@ class GrayscaleSensing:
         
         self.reference(reference)
 
-    @log_on_start(DEBUG, "Setting Reference to: {ref}")
+    #@log_on_start(DEBUG, "Setting Reference to: {ref}")
     def reference(self, ref):
         if isinstance(ref, int) or isinstance(ref, float):
             self._reference = [ref] * 3
@@ -45,7 +45,7 @@ class GrayscaleSensing:
         else:
             raise TypeError("reference parameter must be \'int\', \'float\', or 1*3 list.")
 
-    @log_on_end(INFO, "Grayscale Data:{result}")
+    #@log_on_end(INFO, "Grayscale Data:{result}")
     def getGrayscaleData(self):
         adcValues = []
         adcValues.append(self.chnLeft.read() - self._reference[0])
@@ -53,7 +53,7 @@ class GrayscaleSensing:
         adcValues.append(self.chnRight.read() - self._reference[2])
         return adcValues
     
-    @log_on_end(DEBUG, "Grayscale Sensor Read:{result}")
+    #@log_on_end(DEBUG, "Grayscale Sensor Read:{result}")
     def read(self):
         return self.getGrayscaleData()
 
@@ -63,8 +63,8 @@ class Interpretation:
         self.sen = sensitivity
         self.pol = polarity
 
-    @log_on_end(DEBUG, "Filtered Readings:{result}")
-    @log_on_start(DEBUG, "Filtering {rawReading}")
+    #@log_on_end(DEBUG, "Filtered Readings:{result}")
+    #@log_on_start(DEBUG, "Filtering {rawReading}")
     def filter(self, rawReading):
         # returns 1 if can see line and 0 if can't for reach element of rawReading
         avg = sum(rawReading)/len(rawReading)
@@ -80,7 +80,7 @@ class Interpretation:
 
         return filtered
 
-    @log_on_end(DEBUG, "Interpreted Line State: {result}")
+    #@log_on_end(DEBUG, "Interpreted Line State: {result}")
     def interpLineState(self, filt):
         # there are 2^3 possible outputs one of which is impossible [1,1,1]
         # meaning 7 total possibilities
@@ -105,8 +105,8 @@ class Interpretation:
             logging.log(logging.WARN, f"Filted reading is {filt} and should not be possible")
             return None
 
-    @log_on_start(DEBUG, "Calc Line State raw Reading: {grayscaleReading}")
-    @log_on_end(DEBUG, "Calculated Line State: {result}")
+    #@log_on_start(DEBUG, "Calc Line State raw Reading: {grayscaleReading}")
+    #@log_on_end(DEBUG, "Calculated Line State: {result}")
     def calcLineState(self, grayscaleReading):
         filt = self.filter(grayscaleReading)
         LS = self.interpLineState(filt)
@@ -117,8 +117,8 @@ class Controller:
         self.scale = scaling
         self.max = maxTurn
 
-    @log_on_start(DEBUG, "Recieved Line State:{lineState}")
-    @log_on_end(DEBUG, "Calc Steering Angle: {result}")
+    #@log_on_start(DEBUG, "Recieved Line State:{lineState}")
+    @log_on_end(DEBUG, "Angle: {result}")
     def getSteeringAngle(self, lineState):
         return lineState**3 * self.max * self.scale
 
@@ -152,7 +152,7 @@ def refLearner():
         for i in range(3):
             avg[i] += raw[i]
         time.sleep(0.05)
-    print(f"Average Reading: {avg[0]/100}, {avg[1]/100}, {avg[2]/100}")
+    #print(f"Average Reading: {avg[0]/100}, {avg[1]/100}, {avg[2]/100}")
 if __name__=="__main__":
     #testSensorInterp()
     #testLineState()
@@ -170,7 +170,7 @@ if __name__=="__main__":
             #time_over = inputimeout(prompt="\b", timeout=0.025)
             true + "test"
             safe = False
-            logging.log(DEBUG, "Safe set to False in Line Following")
+            #logging.log(DEBUG, "Safe set to False in Line Following")
             break
         except:
             safe = True
@@ -184,7 +184,7 @@ if __name__=="__main__":
         px.forward(35)
         angle = cont.getSteeringAngle(ls)
         px.set_dir_servo_angle(angle)
-    logging.log(DEBUG, "Line Following Ended")
+    #logging.log(DEBUG, "Line Following Ended")
 
         
 
