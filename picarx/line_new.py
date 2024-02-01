@@ -68,14 +68,14 @@ class Interpretation:
     def filter(self, rawReading):
         # returns 1 if can see line and 0 if can't for reach element of rawReading
         avg = sum(rawReading)/len(rawReading)
-        logging.log(DEBUG, f"Filter Avg: {math.fabs(avg)}")
+        #logging.log(DEBUG, f"Filter Avg: {math.fabs(avg)}")
         maxDiff = max(rawReading) - min(rawReading)
         if maxDiff < 10:
             if math.fabs(avg) < 15.0:
                 return [0,0,0]
             return [1,1,1]
         adj = [(x - avg) if self.pol else (avg - x) for x in rawReading]
-        logging.log(DEBUG, f"Filter Adjusted:{adj}")
+        #logging.log(DEBUG, f"Filter Adjusted:{adj}")
         filtered = [1 if x > 0 else 0 for x in adj]
 
         return filtered
@@ -152,12 +152,12 @@ def refLearner():
         for i in range(3):
             avg[i] += raw[i]
         time.sleep(0.05)
-    #print(f"Average Reading: {avg[0]/100}, {avg[1]/100}, {avg[2]/100}")
+    print(f"Average Reading: {avg[0]/100}, {avg[1]/100}, {avg[2]/100}")
 if __name__=="__main__":
     #testSensorInterp()
     #testLineState()
     #refLearner()
-    ref =  [-91.79, 241.7, 187.14] 
+    ref =  [405, 481, 433] 
 
     px = Picarx()
     grayscale = GrayscaleSensing("A0", "A1", "A2",ref)
@@ -181,7 +181,7 @@ if __name__=="__main__":
         if ls == None:
             px.stop()
             continue
-        px.forward(35)
+        px.forward(30)
         angle = cont.getSteeringAngle(ls)
         px.set_dir_servo_angle(angle)
     #logging.log(DEBUG, "Line Following Ended")
