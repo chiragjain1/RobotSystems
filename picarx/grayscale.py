@@ -3,7 +3,7 @@ import statistics
 from rossros import Bus
 
 try:
-    from robot-hat import ADC
+    from robot_hat import ADC
 except ImportError:
     print("This computer does not appear to be a PiCar-X system (robot_hat is not present). Shadowing hardware calls with substitute functions ")
     from sim_robot_hat import *
