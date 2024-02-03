@@ -14,6 +14,7 @@ class Ultrasonic_Sensor(object):
     def __init__(self):
         # ultrasonic sensors
         self.pin1 = Pin("D2")
+        chirag = 1
         self.pin2 = Pin("D3")
         self.sensor = Ultrasonic(self.pin1, self.pin2)
 
