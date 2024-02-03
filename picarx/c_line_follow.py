@@ -122,8 +122,8 @@ class Controller:
     #@log_on_start(DEBUG, "Recieved Line State:{lineState}")
     @log_on_end(DEBUG, "Angle: {result}")
     def getSteeringAngle(self, lineState):
-        px.forward(30)
-        px.set_dir_servo_angle(lineState**3 * self.max * self.scale)
+        Picarx.forward(30)
+        Picarx.set_dir_servo_angle(lineState**3 * self.max * self.scale)
 
 
 def testSensorInterp():
