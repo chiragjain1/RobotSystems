@@ -13,16 +13,16 @@ def follow_line():
     car = Picarx()
     gs_interpreter = Grayscale_Interpreter()
     gs_controller = Grayscale_Controller(car)
-    us_sensor = Ultrasonic_Sensor()
-    us_interpreter = Ultrasonic_Interpreter()
-    us_controller = Ultrasonic_Controller(car)
+    #us_sensor = Ultrasonic_Sensor()
+    #us_interpreter = Ultrasonic_Interpreter()
+    #us_controller = Ultrasonic_Controller(car)
     # setup busses
     gs_interpreter_bus = Bus(initial_message=[0, 0, 0],name="gs_interpreter_bus")
     gs_sensor_bus = Bus(initial_message=0,name="gs_sensor_bus")
-    us_sensor_bus = Bus(initial_message=0,
-                           name="us_sensor_bus")
-    us_interpreter_bus = Bus(initial_message=False,
-                                name="us_interpreter_bus")
+    #us_sensor_bus = Bus(initial_message=0,
+    #                       name="us_sensor_bus")
+    #us_interpreter_bus = Bus(initial_message=False,
+    #                            name="us_interpreter_bus")
     delay = 0.05
 
     input("Press enter to start")
@@ -37,16 +37,16 @@ def follow_line():
                                       name="gs_process")
     gs_control = Consumer(gs_controller.controller, input_busses=gs_interpreter_bus, delay=0.1, name="gs_control")
 
-    us_read = Producer(us_sensor.read, output_busses=us_sensor_bus, delay=0.1, name="us_read")
+    #us_read = Producer(us_sensor.read, output_busses=us_sensor_bus, delay=0.1, name="us_read")
 
-    us_process = ConsumerProducer(us_interpreter.interpret_obstacle,
-                                      input_busses=us_sensor_bus,
-                                      output_busses=us_interpreter_bus,
-                                      delay=0.1,
-                                      name="us_process")
-    us_control = Consumer(us_controller.ultra_controller, input_busses=us_interpreter_bus, delay=0.1, name="us_control")
+    #us_process = ConsumerProducer(us_interpreter.interpret_obstacle,
+    #                                  input_busses=us_sensor_bus,
+    #                                  output_busses=us_interpreter_bus,
+    #                                  delay=0.1,
+    #                                  name="us_process")
+    #us_control = Consumer(us_controller.ultra_controller, input_busses=us_interpreter_bus, delay=0.1, name="us_control")
 
-    thread_list = [gs_read, gs_process, gs_control, us_read, us_process, us_control]
+    thread_list = [gs_read, gs_process, gs_control]
     runConcurrently(thread_list)
 
 
