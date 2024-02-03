@@ -36,7 +36,8 @@ def follow_line():
                                       output_buses=gs_interpreter_bus,
                                       delay=0.1,
                                       name="gs_process")
-    gs_control = Consumer(gs_controller.getSteeringAngle(), input_buses=gs_interpreter_bus, delay=0.1, name="gs_control")
+    ls = gs_interpreter.calcLineState(raw)
+    gs_control = Consumer(gs_controller.getSteeringAngle(ls), input_buses=gs_interpreter_bus, delay=0.1, name="gs_control")
 
     #us_read = Producer(us_sensor.read, output_busses=us_sensor_bus, delay=0.1, name="us_read")
 
