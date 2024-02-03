@@ -30,7 +30,7 @@ def follow_line():
     # grayscale sensor threads
     gs_read = Producer(gs_sensor.read, output_buses=gs_sensor_bus, delay=0.1, name="gs_read")
 
-    gs_process = ConsumerProducer(gs_interpreter.interpret_position,
+    gs_process = ConsumerProducer(gs_interpreter.processing,
                                       input_buses=gs_sensor_bus,
                                       output_buses=gs_interpreter_bus,
                                       delay=0.1,
