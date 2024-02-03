@@ -93,7 +93,7 @@ class Grayscale_Controller(object):
     def control(self, offset):
         steering_angle = offset * self.scale
         self.car.set_dir_servo_angle(steering_angle)
-        self.car.forward(20)
+        self.car.forward(30)
 
     '''
     def consume(self, interpreter_bus: Bus, delay):
