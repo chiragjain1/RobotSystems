@@ -27,7 +27,11 @@ def follow_line():
     delay = 0.05
 
     input("Press enter to start")
-
+    raw = gs_sensor.read()
+    ls = gs_interpreter.calcLineState(raw)
+    px.forward(30)
+    angle = gs_controller.getSteeringAngle(ls)
+    px.set_dir_servo_angle(angle)
     # grayscale sensor threads
     gs_read = Producer(gs_sensor.read, output_buses=gs_sensor_bus, delay=0.1, name="gs_read")
 
@@ -50,11 +54,7 @@ def follow_line():
 
     thread_list = [gs_read, gs_process, gs_control]
     runConcurrently(thread_list)
-    raw = gs_sensor.read()
-    ls = gs_interpreter.calcLineState(raw)
-    px.forward(30)
-    angle = gs_controller.getSteeringAngle(ls)
-    px.set_dir_servo_angle(angle)
+
 
 if __name__ == "__main__":
     follow_line()
