@@ -7,9 +7,6 @@ from picarx_improved import Picarx
 
 def follow_line():
     sensor = Sensors()
-    input("Press enter to calibrate grayscale, make sure all sensors are on white")
-
-    sensor.calibrate_grayscale()
 
     # setup car things
     interpreter = Interpreter()
@@ -21,8 +18,8 @@ def follow_line():
     while(True):
         values = sensor.read()
         print(values)
-        print([a/b for a,b in zip(values,sensor.grayscale_cal_values)])
-        controller.control(interpreter.processing(values,sensor.grayscale_cal_values))
+        print([a/b for a,b in zip(values,sensor.read)])
+        controller.control(interpreter.processing(values,sensor.read))
         car.forward(30)
         time.sleep(0.1)
         #car.set_dir_servo_angle(-20)
