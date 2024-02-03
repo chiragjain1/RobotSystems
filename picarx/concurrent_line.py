@@ -39,9 +39,6 @@ def follow_line():
                                       name="gs_process")
     ls = gs_interpreter.calcLineState(raw)
     gs_control = Consumer(gs_controller.getSteeringAngle(ls), input_buses=gs_interpreter_bus, delay=0.1, name="gs_control")
-    px.forward(30)
-    angle = gs_controller.getSteeringAngle(ls)
-    px.set_dir_servo_angle(angle)
     #us_read = Producer(us_sensor.read, output_busses=us_sensor_bus, delay=0.1, name="us_read")
 
     #us_process = ConsumerProducer(us_interpreter.interpret_obstacle,
@@ -53,7 +50,11 @@ def follow_line():
 
     thread_list = [gs_read, gs_process, gs_control]
     runConcurrently(thread_list)
-
+    raw = gs_sensor.read()
+    ls = gs_interpreter.calcLineState(raw)
+    px.forward(30)
+    angle = gs_controller.getSteeringAngle(ls)
+    px.set_dir_servo_angle(angle)
 
 if __name__ == "__main__":
     follow_line()
