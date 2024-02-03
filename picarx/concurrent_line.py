@@ -40,7 +40,7 @@ def follow_line():
     ls = gs_interpreter.calcLineState(raw)
     gs_control = Consumer(gs_controller.getSteeringAngle(ls), input_buses=gs_interpreter_bus, delay=0.1, name="gs_control")
     px.forward(30)
-    angle = gs_control.getSteeringAngle(ls)
+    angle = gs_controller.getSteeringAngle(ls)
     px.set_dir_servo_angle(angle)
     #us_read = Producer(us_sensor.read, output_busses=us_sensor_bus, delay=0.1, name="us_read")
 
