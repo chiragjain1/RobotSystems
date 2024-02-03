@@ -28,14 +28,14 @@ def follow_line():
     input("Press enter to start")
 
     # grayscale sensor threads
-    gs_read = Producer(gs_sensor.read, output_busses=gs_sensor_bus, delay=0.1, name="gs_read")
+    gs_read = Producer(gs_sensor.read, output_buses=gs_sensor_bus, delay=0.1, name="gs_read")
 
     gs_process = ConsumerProducer(gs_interpreter.interpret_position,
-                                      input_busses=gs_sensor_bus,
-                                      output_busses=gs_interpreter_bus,
+                                      input_buses=gs_sensor_bus,
+                                      output_buses=gs_interpreter_bus,
                                       delay=0.1,
                                       name="gs_process")
-    gs_control = Consumer(gs_controller.controller, input_busses=gs_interpreter_bus, delay=0.1, name="gs_control")
+    gs_control = Consumer(gs_controller.controller, input_buses=gs_interpreter_bus, delay=0.1, name="gs_control")
 
     #us_read = Producer(us_sensor.read, output_busses=us_sensor_bus, delay=0.1, name="us_read")
 
