@@ -21,21 +21,7 @@ class Sensors(object):
         adc_value_list.append(self.chn2.read())
         return adc_value_list
 
-    def calibrate_grayscale(self):
-        x = 0
-        ch0 = []
-        ch1 = []
-        ch2 = []
-        while (x < 10):
-            time.sleep(0.1)
-            values = self.read()
-            ch0.append(values[0])
-            ch1.append(values[1])
-            ch2.append(values[2])
-            x = x + 1
-        self.grayscale_cal_values.append(statistics.mean(ch0))
-        self.grayscale_cal_values.append(statistics.mean(ch1))
-        self.grayscale_cal_values.append(statistics.mean(ch2))
+
 
 if __name__ == "__main__":
     sensor = Sensors()
