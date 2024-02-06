@@ -1,129 +1,133 @@
-from picarx_improved import Picarx, constrain
-from bus import Bus
-from robot_hat import ADC, Grayscale_Module
-from time import sleep
-import logging
-from concurrent.futures import ThreadPoolExecutor
+import time
+from picarx_improved import Picarx
+import concurrent.futures
+from readerwriterlock import rwlock
+
+try:
+    from robot_hat import ADC
+    from robot_hat.utils import reset_mcu, run_command
+except ImportError:
+    from sim_robot_hat import ADC
+    from sim_robot_hat import reset_mcu, run_command
+
+reset_mcu()
+time.sleep(0.2)
+px = Picarx()
+
+class Bus:
+    def __init__(self):
+        self.message = [0, 0, 0]  
+        self.lock = rwlock.RWLockWriteD()
+
+    def write(self, message):
+        with self.lock.gen_wlock():
+            self.message = message
+
+    def read(self):
+        with self.lock.gen_rlock():
+            return self.message
 
 class Sensing():
-    def __init__(self, 
-                grayscale_pins:list=['A0', 'A1', 'A2'],
-                ):
-        # --------- grayscale module init ---------
-        adc0, adc1, adc2 = [ADC(pin) for pin in grayscale_pins]
-        self.grayscale = Grayscale_Module(adc0, adc1, adc2, reference=None)
-        
-    def sense(self) -> list[int]:
-        return list.copy(self.grayscale.read())
+
+    def __init__(self):
+            self.chn_0 = ADC('A0')
+            self.chn_1 = ADC('A1')
+            self.chn_2 = ADC('A2')
+
+    def get_grayscale_data(self):
+        adc_value_list = []
+        adc_value_0 = self.chn_0.read()
+        adc_value_1 = self.chn_1.read()
+        adc_value_2 = self.chn_2.read()
+        print(f"ADC values: {adc_value_0}, {adc_value_1}, {adc_value_2}")
+        adc_value_list.append(adc_value_0)
+        adc_value_list.append(adc_value_1)
+        adc_value_list.append(adc_value_2)
+        return adc_value_list
+
+      
+    def read(self):
+        return self.get_grayscale_data()
     
-    def producer(self, bus: Bus, delay: int = 0):
+    def sensor(self, bus, delay):
         while True:
-            bus.write(self.sense())
-            sleep(delay)
-
-
+            bus.write(self.get_grayscale_data())
+            time.sleep(delay)
+            
 class Interpreter():
-    def __init__(self, 
-                sensitivity:int=0.0,
-                ):
+     
+    def __init__(self,sensitivity=0.7, polarity=-1):
         self.sensitivity = sensitivity
-        self.last_turn_factor = 0
-        
-    def interpret_three_led(self, gs_readings: list[int], max_edge: float=1.1):
-        logging.debug(f'\RAW GRAYSCALE:: {gs_readings}')
-
-        readings_avg = (sum(gs_readings) / len(gs_readings))
-        if(readings_avg == 0):
-            readings_avg = 1
-
-        norm_gs_readings = [x/readings_avg for x in gs_readings]
-        logging.debug(f'Normalized Grayscale Readings: {norm_gs_readings}')
-
-        edges = [1*abs(norm_gs_readings[0] - norm_gs_readings[1]), 0.6*abs(norm_gs_readings[2] - norm_gs_readings[1])]
-        logging.debug(f'EDGES: {edges}')
-
-        far_right = (edges[0] / max_edge)
-        far_left = (edges[1]  / max_edge)
-        turn_factor = 0
-
-        if(abs(edges[0] - edges[1]) > self.sensitivity):
-            if(far_right>far_left):
-                #logging.debug(f'TURNING LEFT')
-                turn_factor = -constrain(far_right - far_left - self.sensitivity, 0, 1)
-                # turn_factor = -constrain(far_right - self.sensitivity, 0, 1)
-                # turn_factor = -constrain(far_right, 0, 1)
-            elif(far_right<far_left):
-                #logging.debug(f'TURNING RIGHT')
-                turn_factor = constrain(far_left - far_right - self.sensitivity, 0, 1)
-                # turn_factor = constrain(far_left - self.sensitivity, 0, 1)
-                # turn_factor = constrain(far_left, 0, 1)
-        
-        if(turn_factor == 0):
-            turn_factor = self.last_turn_factor
+        self.polarity = polarity
+    
+    def interpret(self, readings):
+       
+        avg = sum(readings) / len(readings)
+        if self.polarity == 1:
+            return [1 if (reading - avg) > self.sensitivity else 0 for reading in readings]
         else:
-            self.last_turn_factor = turn_factor
-
-        logging.debug(f'TURN FACTOR: {turn_factor}')
-        return turn_factor
-
-    def consumer_producer(self, sense_bus:Bus, interpret_bus:Bus, delay:int):
+            return [0 if (reading - avg) > self.sensitivity else 1 for reading in readings]
+            
+    def map_readings_to_value(self,readings):
+        #print(f"Int is processing value: {readings}")
+        if readings == [0, 1, 0]:
+            return 0
+        elif readings == [0, 1, 1]:
+            return 0.5
+        elif readings == [0, 0, 1]:
+            return 1
+        elif readings == [1, 1, 0]:
+            return -0.5
+        elif readings == [1, 0, 0]:
+            return -1
+        elif readings == [1, 1, 1]:
+            return 0
+        elif readings == [0, 0, 0]:
+            return 0
+        
+    def interpreter(self, bus_sensor, bus_control, delay):
         while True:
-            interpret_bus.write(self.interpret_three_led(gs_readings=sense_bus.read()))
-            sleep(delay)
+            readings = bus_sensor.read()
+            interpreted = self.map_readings_to_value(self.interpret(readings))
+            bus_control.write(interpreted)
+            time.sleep(delay)
 
 class Controller():
-    def __init__(self, picarx: Picarx):
-        self.px = picarx
+    def __init__(self,scaling=1.0):
+        self.scaling = scaling
 
-    def follow_line(self, interpreted_sensor_val: int, steer_deadzone: float=0.05):
-        
-        # Check steer deadzone
-        steer = False
-        if(interpreted_sensor_val > 0):
-            if(interpreted_sensor_val>steer_deadzone):
-                steer = True
-        else:
-            if(interpreted_sensor_val<-steer_deadzone):
-                steer = True
-
-        # Map turn factor to actual steer angle
-        angle_max = self.px.DIR_MAX + 5
-        angle = interpreted_sensor_val*(angle_max)
-        angle = constrain(angle, px.DIR_MIN, px.DIR_MAX)
-
-        logging.debug(f'ANGLE: {angle}')
-        
-        #Motion control
-        self.px.forward(35)
-        if(steer):
-            self.px.set_dir_servo_angle(angle)
-
-    def consumer(self, interpret_bus:Bus, delay:int):
+    def controller(self, bus, delay):
         while True:
-            self.follow_line(interpret_bus.read())
-            sleep(delay)
+            value = bus.read()
+            self.control(value)
+            time.sleep(delay)
+
+    def control(self, value):
+        #print(f"Controller is processing value: {value}")
+        if value == 0:
+            px.set_dir_servo_angle(0)
+        elif value == 1:
+            px.set_dir_servo_angle(30*self.scaling)
+        elif value == -1:
+            px.set_dir_servo_angle(-30*self.scaling)
+        elif value == -0.5:
+            px.set_dir_servo_angle(-30*self.scaling)
+        elif value == 0.5:
+            px.set_dir_servo_angle(30*self.scaling)
+
+    
 
 if __name__ == "__main__":
-    px = Picarx()
-
-    sensor = Sensing()
-    interpreter = Interpreter()
-    controller = Controller(px)
-    sensor_delay = 0.01
-    interpreter_delay = 0.01
-    controller_delay = 0.05
-
-    sensor_bus = Bus()
-    interpreter_bus = Bus()
-    controller_bus = Bus()
-
-    with ThreadPoolExecutor(max_workers=3) as exec:
-        eSensor = exec.submit(sensor.producer, sensor_bus, sensor_delay)
-        eInterpreter = exec.submit(interpreter.consumer_producer, sensor_bus, interpreter_bus, interpreter_delay)
-        eController = exec.submit(controller.consumer, controller_bus, controller_delay)
-
-        eSensor.result()
-        eInterpreter.result()
-        eController.result()
-
-    px.stop()
+    px.forward(25)
+    bus_sensor = Bus()
+    bus_control = Bus()
+    sensing = Sensing()
+    interpreter = Interpreter(sensitivity=0.99, polarity=-1)
+    controller = Controller(scaling=1)
+    with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
+        eSensor = executor.submit(sensing.sensor, bus_sensor, 0.001)
+        eInterpreter = executor.submit(interpreter.interpreter, bus_sensor, bus_control, 0.01)
+        eController = executor.submit(controller.controller, bus_control, 0.1 )
+eSensor.result()
+eInterpreter.result()
+eController.result()
