@@ -118,7 +118,7 @@ class Controller():
     
 
 if __name__ == "__main__":
-    px.forward(25)
+    px.forward(30)
     bus_sensor = Bus()
     bus_control = Bus()
     sensing = Sensing()
