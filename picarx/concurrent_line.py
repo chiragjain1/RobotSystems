@@ -190,7 +190,7 @@ if __name__ == "__main__":
     # Common Parameters
     scale = 30.0
     polarity = -1
-    speed = 22
+    speed = 35
 
     # Parameters for grayscale sensors
     l_th = 0.35
