@@ -121,7 +121,7 @@ if __name__ == "__main__":
     with ThreadPoolExecutor(max_workers=3) as exec:
         eSensor = exec.submit(sensor.producer, sensor_bus, sensor_delay)
         eInterpreter = exec.submit(interpreter.consumer_producer, sensor_bus, interpreter_bus, interpreter_delay)
-        eController = exec.submit(controller.consumer, controller_bus, controller_delay)
+        eController = exec.submit(controller.consumer, interpreter_bus, controller_delay)
 
         eSensor.result()
         eInterpreter.result()
