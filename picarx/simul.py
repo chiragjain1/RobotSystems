@@ -1,96 +1,130 @@
-import time
-import concurrent.futures
+from picarx_improved import Picarx, constrain
+from bus import Bus
+from robot_hat import ADC, Grayscale_Module
 from time import sleep
-try:
-    from robot_hat import ADC
-except ImportError:
-    from sim_robot_hat import ADC
-from picarx_improved import Picarx
-from readerwriterlock import rwlock
+import logging
+from concurrent.futures import ThreadPoolExecutor
 
-import concurrent.futures
-from readerwriterlock import rwlock
-import time
-
-class MessageBus(object):
-    def __init__(self):
-        self.message = None
-        self.lock = rwlock.RWLockWriteD()
-
-    def write(self, message):
-        with self.lock.gen_wlock():
-            self.message = message
-
-    def read(self):
-        with self.lock.gen_rlock():
-            return self.message
-
-class Grayscale_Module(object):
-    def __init__(self, sensor_bus):
-        self.sensor_bus = sensor_bus
-
-    def get_grayscale_data(self):
-        adc_value_list = [1, 2, 3]  # replace with actual data
-        self.sensor_bus.write(adc_value_list)
-
-class Interp(object):
-    @staticmethod
-    def get_status(val_list):
-        if val_list == [0, 0, 0]:
-            return 'stop'
-        elif val_list == [0, 1, 0]:
-            return 'forward'
-        elif val_list == [0, 0, 1]:
-            return 'right'
-        elif val_list == [1, 0, 0]:
-            return 'left'
-
-class Controller(object):
-    @staticmethod
-    def get_position(val_list):
-        avg_value = sum(val_list) / len(val_list)
-        position = (avg_value - 127.5) / 127.5
-        return position
-
-    @staticmethod
-    def run_controller(interpreter_bus, control_bus):
-        last_state = "stop"
-        px_power = 60
-        px = Picarx()  # Assuming you have a Picarx class
-
+class Sensing():
+    def __init__(self, 
+                grayscale_pins:list=['A0', 'A1', 'A2'],
+                ):
+        # --------- grayscale module init ---------
+        adc0, adc1, adc2 = [ADC(pin) for pin in grayscale_pins]
+        self.grayscale = Grayscale_Module(adc0, adc1, adc2, reference=None)
+        
+    def sense(self) -> list[int]:
+        return list.copy(self.grayscale.read())
+    
+    def producer(self, bus: Bus, delay: int = 0):
         while True:
-            gm_val_list = interpreter_bus.read()
-            gm_state = Interp.get_status(gm_val_list)
+            bus.write(self.sense())
+            sleep(delay)
 
-            position = Controller.get_position(gm_val_list)
 
-            if gm_state != 'stop':
-                last_state = position
+class Interpreter():
+    def __init__(self, 
+                sensitivity:int=0.0,
+                ):
+        self.sensitivity = sensitivity
+        self.last_turn_factor = 0
+        
+    def interpret_three_led(self, gs_readings: list[int], max_edge: float=1.1):
+        logging.debug(f'\RAW GRAYSCALE:: {gs_readings}')
 
-                # Adjust the angle and direction based on the last state
-                px.set_dir_servo_angle(last_state * 45)
-                px.forward(px_power)
+        readings_avg = (sum(gs_readings) / len(gs_readings))
+        if(readings_avg == 0):
+            readings_avg = 1
 
-            time.sleep(0.001)
+        norm_gs_readings = [x/readings_avg for x in gs_readings]
+        logging.debug(f'Normalized Grayscale Readings: {norm_gs_readings}')
+
+        edges = [1*abs(norm_gs_readings[0] - norm_gs_readings[1]), 0.6*abs(norm_gs_readings[2] - norm_gs_readings[1])]
+        logging.debug(f'EDGES: {edges}')
+
+        far_right = (edges[0] / max_edge)
+        far_left = (edges[1]  / max_edge)
+        turn_factor = 0
+
+        if(abs(edges[0] - edges[1]) > self.sensitivity):
+            if(far_right>far_left):
+                #logging.debug(f'TURNING LEFT')
+                turn_factor = -constrain(far_right - far_left - self.sensitivity, 0, 1)
+                # turn_factor = -constrain(far_right - self.sensitivity, 0, 1)
+                # turn_factor = -constrain(far_right, 0, 1)
+            elif(far_right<far_left):
+                #logging.debug(f'TURNING RIGHT')
+                turn_factor = constrain(far_left - far_right - self.sensitivity, 0, 1)
+                # turn_factor = constrain(far_left - self.sensitivity, 0, 1)
+                # turn_factor = constrain(far_left, 0, 1)
+        
+        if(turn_factor == 0):
+            turn_factor = self.last_turn_factor
+        else:
+            self.last_turn_factor = turn_factor
+
+        logging.debug(f'TURN FACTOR: {turn_factor}')
+        return turn_factor
+
+    def consumer_producer(self, sense_bus:Bus, interpret_bus:Bus, delay:int):
+        while True:
+            interpret_bus.write(self.interpret_three_led(gs_readings=sense_bus.read()))
+            sleep(delay)
+
+class Controller():
+    def __init__(self, picarx: Picarx):
+        self.px = picarx
+
+    def follow_line(self, interpreted_sensor_val: int, steer_deadzone: float=0.05):
+        
+        # Check steer deadzone
+        steer = False
+        if(interpreted_sensor_val > 0):
+            if(interpreted_sensor_val>steer_deadzone):
+                steer = True
+        else:
+            if(interpreted_sensor_val<-steer_deadzone):
+                steer = True
+
+        # Map turn factor to actual steer angle
+        angle_max = self.px.DIR_MAX + 5
+        angle = interpreted_sensor_val*(angle_max)
+        angle = constrain(angle, px.DIR_MIN, px.DIR_MAX)
+
+        logging.debug(f'ANGLE: {angle}')
+        
+        #Motion control
+        self.px.forward(35)
+        if(steer):
+            self.px.set_dir_servo_angle(angle)
+
+    def consumer(self, interpret_bus:Bus, delay:int):
+        while True:
+            self.follow_line(interpret_bus.read())
+            sleep(delay)
 
 if __name__ == "__main__":
-    # Create instances of MessageBus
-    sensor_bus = MessageBus()
-    interpreter_bus = MessageBus()
-    control_bus = MessageBus()
+    px = Picarx()
 
-    # Create ThreadPoolExecutor for concurrent execution
-    with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
-        eSensor = executor.submit(Grayscale_Module, sensor_bus, sensor_delay=0.001)
-        eInterpreter = executor.submit(Interp, sensor_bus, interpreter_bus, interpreter_delay=0.001)
-        eController = executor.submit(Controller, interpreter_bus, control_bus, control_delay=0.001)
+    sensor = Sensing()
+    interpreter = Interpreter()
+    controller = Controller(px)
 
-        try:
-            # Your existing code for setting up Picarx
-            while True:
-                time.sleep(1)  # Adjust sleep duration as needed
-        except KeyboardInterrupt:
-            print("Program terminated by user.")
-        finally:
-            # Your existing cleanup code
-            pass  # Add cleanup code if needed
+    sensor_delay = 0.01
+    interpreter_delay = 0.01
+    controller_delay = 0.05
+
+    sensor_bus = Bus()
+    interpreter_bus = Bus()
+    controller_bus = Bus()
+
+    with ThreadPoolExecutor(max_workers=3) as exec:
+        eSensor = exec.submit(sensor.producer, sensor_bus, sensor_delay)
+        eInterpreter = exec.submit(interpreter.consumer_producer, sensor_bus, interpreter_bus, interpreter_delay)
+        eController = exec.submit(controller.consumer, controller_bus, controller_delay)
+
+        eSensor.result()
+        eInterpreter.result()
+        eController.result()
+
+    px.stop()
