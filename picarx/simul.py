@@ -109,7 +109,8 @@ if __name__ == "__main__":
     sensor = Sensing()
     interpreter = Interpreter()
     controller = Controller(px)
-
+    Picarx.forward(35)
+    sleep(5)
     sensor_delay = 0.01
     interpreter_delay = 0.01
     controller_delay = 0.05
@@ -121,7 +122,7 @@ if __name__ == "__main__":
     with ThreadPoolExecutor(max_workers=3) as exec:
         eSensor = exec.submit(sensor.producer, sensor_bus, sensor_delay)
         eInterpreter = exec.submit(interpreter.consumer_producer, sensor_bus, interpreter_bus, interpreter_delay)
-        eController = exec.submit(controller.consumer, interpreter_bus, controller_delay)
+        eController = exec.submit(controller.consumer, controller_bus, controller_delay)
 
         eSensor.result()
         eInterpreter.result()
