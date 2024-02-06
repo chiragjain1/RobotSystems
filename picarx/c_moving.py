@@ -19,7 +19,7 @@ class Maneuvers(Picarx):
         self.set_dir_servo_angle(angle)
 
         # Use forward() to drive forward with ackerman steering
-        self.forward(speed, is_ackerman=True)
+        self.forward(speed)
 
     def backward_with_angle(self, speed, angle):
         '''Drive backward with a given speed and angle'''
@@ -28,7 +28,7 @@ class Maneuvers(Picarx):
         self.set_dir_servo_angle(angle)
 
         # Use backward() to drive backward with ackerman steering
-        self.backward(speed, is_ackerman=True)
+        self.backward(speed)
 
     def drive_steer(self, speed, angle):
         '''Drive forward or backward with a given speed and angle
