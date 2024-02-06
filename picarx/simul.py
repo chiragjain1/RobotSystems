@@ -109,8 +109,6 @@ if __name__ == "__main__":
     sensor = Sensing()
     interpreter = Interpreter()
     controller = Controller(px)
-    px.forward(35)
-    sleep(5)
     sensor_delay = 0.01
     interpreter_delay = 0.01
     controller_delay = 0.05
