@@ -37,7 +37,7 @@ class Ultrasonic_Controller(object):
     def __init__(self,car,speed=20):
         self.speed = speed
         self.car = car
-
+        x = 0
     def control(self, stop: bool):
         if stop:
             self.car.stop()
