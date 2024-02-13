@@ -39,7 +39,6 @@ class Sensing():
         adc_value_0 = self.chn_0.read()
         adc_value_1 = self.chn_1.read()
         adc_value_2 = self.chn_2.read()
-        print(f"The value is: {adc_value_1}")
         adc_value_list.append(adc_value_0)
         adc_value_list.append(adc_value_1)
         adc_value_list.append(adc_value_2)
